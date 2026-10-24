@@ -26,6 +26,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
         ) { [weak self] _ in self?.tap.reenable() }
 
+        tap.onPermissionLost = { [weak self] in
+            self?.updateIcon()
+            self?.waitForPermission()
+        }
+
+        // Escape hatch: holding Shift at launch starts without the tap (menu › Pause is on).
+        if NSEvent.modifierFlags.contains(.shift) {
+            tap.isEnabled = false
+            defaults.set(false, forKey: "enabled")
+        }
+
         if !tap.start() {
             // Shows the system prompt once; after that the menu item opens System Settings.
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
@@ -74,12 +85,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.indentationLevel = 1
             menu.addItem(item)
         }
+        // Read-only lines to check that the device and the system setting are recognized.
+        var info = [tap.systemNatural ? L("System setting: on", "시스템 설정: 켬") : L("System setting: off", "시스템 설정: 끔")]
         if let last = tap.lastDevice {
             let name = last == .trackpad ? L("Trackpad", "트랙패드") : L("Mouse", "마우스")
-            let info = NSMenuItem(title: L("Last scroll: \(name)", "마지막 스크롤: \(name)"), action: nil, keyEquivalent: "")
-            info.isEnabled = false
-            info.indentationLevel = 1
-            menu.addItem(info)
+            info.insert(L("Last scroll: \(name)", "마지막 스크롤: \(name)"), at: 0)
+        }
+        for title in info {
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            item.indentationLevel = 1
+            menu.addItem(item)
         }
 
         menu.addItem(.separator())
