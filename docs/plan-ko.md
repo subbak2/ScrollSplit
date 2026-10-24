@@ -54,6 +54,7 @@
 - 직접 발견한 버그: `UserDefaults(suiteName: NSGlobalDomain)`이 nil이라 시스템 설정을 항상 '켬'으로 읽음 → CFPreferences로 수정.
 - 보완: 권한 회수 알림 시 탭 제거, 설정 재확인은 콜백 밖으로, 일시 정지 = 탭 끔, Shift 실행 = 정지 상태 시작, 잠자기 해제 시 재활성화, Hardened Runtime.
 - 2차 Codex: "고칠 것 없음, 배포해도 됨".
+- 2차 Gemini 사실 확인: 권한 회수 시 입력 정지 보고 확인 → 알림(비공식)에 더해 스크롤 중 5초마다·잠자기 해제 때 권한 재확인 추가. 소프트웨어 부드러운 스크롤·원격 입력에서 phase 기반 구분의 예외 확인 → 한계에 명시. Scroll Reverser 2.0은 비공개 API로 기기를 판별(정확도↑, 업데이트 위험↑) → ScrollSplit은 공개 필드만 유지. Hardened Runtime이 애드혹 서명에서도 DYLD 주입을 막는 것 확인.
 
 ## 6. 메뉴
 

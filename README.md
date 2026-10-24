@@ -56,7 +56,7 @@ ScrollSplit only edits numbers in scroll events that pass through it. It changes
 - **If scrolling ever stops or feels wrong:** quit from the menu, or run `killall ScrollSplit` in Terminal. macOS removes the event tap the moment the process ends.
 - **Start without it:** hold **Shift** while launching. The app starts paused; uncheck **Pause** in the menu when ready.
 - **If the app hangs**, macOS switches the tap off after about a second and scrolling continues unchanged; the app turns the tap back on when it recovers, and after the Mac wakes from sleep.
-- **If you remove Accessibility access** while it runs, the app drops the tap right away and waits for access again, instead of leaving an active tap without permission.
+- **If you remove Accessibility access** while it runs, the app drops the tap right away and waits for access again, instead of leaving an active tap without permission (an active tap left behind without permission has been reported to lock up input). It reacts to the system's change notification and, as a backup, re-checks every 5 seconds while scrolling and after wake.
 - **After a macOS update**, the app relies only on public Quartz Event Services APIs plus the `com.apple.swipescrolldirection` preference (read through CFPreferences, re-read every 5 seconds while scrolling in case the change notification is renamed). If a future macOS changes how trackpad scroll phases are reported, the worst case is the wrong device getting flipped; **Pause** or quitting fixes that immediately.
 - **After replacing the app with a new build**, macOS may treat it as a different app (ad-hoc signatures change per build). Remove ScrollSplit from the Accessibility list with **−** and turn it on again.
 
@@ -74,9 +74,10 @@ Leaving it running costs nothing you would notice on battery.
 ## Limitations
 
 - **Magic Mouse** reports scroll phases like a trackpad, so it follows the **Trackpad** setting.
-- **Mice with driver-side smooth scrolling** (for example Logi Options+ "Smooth scrolling") may send phased events and then count as a trackpad. Turn smooth scrolling off in the driver, or use **Pause**.
+- **Mice with smooth scrolling added by software** (Logi Options+ "Smooth scrolling", Mac Mouse Fix, Mos, LinearMouse) send trackpad-like phased events, so they count as a trackpad. Turn that smoothing off, or use **Pause**.
+- **Device detection uses only public event fields** (scroll and momentum phase). Scroll Reverser 2.0 identifies the physical device through private APIs; ScrollSplit deliberately doesn't, trading some accuracy in the cases above for fewer things a macOS update can break.
 - **Several scroll tools at once** (Scroll Reverser, Mos, LinearMouse, UnnaturalScrollWheels, Logi Options+ scroll features, Karabiner-Elements) can flip the same events twice. Use one.
-- **Remote desktop / Screen Sharing / Universal Control**: events coming from another Mac may be classified differently. If one direction looks wrong there, check what *Last scroll* shows.
+- **Remote desktop / Screen Sharing / Sidecar / Universal Control**: events coming from another device can lose their phase information, so a remote trackpad may count as a mouse. If one direction looks wrong there, check what *Last scroll* shows.
 - **iPhone Mirroring** and some games may read scroll input in ways the event tap doesn't affect.
 - Ad-hoc signed and not notarized (see Install).
 

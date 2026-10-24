@@ -56,7 +56,7 @@ final class ScrollTap {
         source = nil
     }
 
-    private func stopIfUntrusted() {
+    func stopIfUntrusted() {
         guard tap != nil, !AXIsProcessTrusted() else { return }
         log.notice("Accessibility access removed, tap stopped")
         stop()
@@ -127,7 +127,10 @@ final class ScrollTap {
         // talks to cfprefsd, so do it after this event is handed back, never inside the callback.
         if Date().timeIntervalSince(lastSettingRead) > 5 {
             lastSettingRead = Date()
-            DispatchQueue.main.async { [weak self] in self?.refreshSystemSetting() }
+            DispatchQueue.main.async { [weak self] in
+                self?.refreshSystemSetting()
+                self?.stopIfUntrusted() // backup for the undocumented permission notification
+            }
         }
         let device = ScrollTap.device(of: event)
         lastDevice = device

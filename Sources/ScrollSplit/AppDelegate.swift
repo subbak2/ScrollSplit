@@ -24,7 +24,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
-        ) { [weak self] _ in self?.tap.reenable() }
+        ) { [weak self] _ in
+            self?.tap.stopIfUntrusted()
+            self?.tap.reenable()
+        }
 
         tap.onPermissionLost = { [weak self] in
             self?.updateIcon()
