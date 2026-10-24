@@ -13,6 +13,7 @@ final class ScrollTap {
     private(set) var systemNatural = ScrollTap.readSystemNatural()
     var isEnabled = true
     private(set) var lastDevice: ScrollDevice?
+    private var lastSettingRead = Date()
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
 
@@ -47,11 +48,20 @@ final class ScrollTap {
 
     func refreshSystemSetting() {
         systemNatural = ScrollTap.readSystemNatural()
+        lastSettingRead = Date()
+    }
+
+    /// Turns the tap back on if macOS switched it off (sleep, timeouts).
+    func reenable() {
+        if let tap, !CGEvent.tapIsEnabled(tap: tap) { CGEvent.tapEnable(tap: tap, enable: true) }
     }
 
     private static func readSystemNatural() -> Bool {
+        // UserDefaults(suiteName: NSGlobalDomain) is nil, so read the global domain through CFPreferences.
         // Missing key means the macOS default, which is natural scrolling on.
-        UserDefaults(suiteName: UserDefaults.globalDomain)?.object(forKey: "com.apple.swipescrolldirection") as? Bool ?? true
+        let key = "com.apple.swipescrolldirection" as CFString
+        CFPreferencesAppSynchronize(kCFPreferencesAnyApplication)
+        return CFPreferencesCopyAppValue(key, kCFPreferencesAnyApplication) as? Bool ?? true
     }
 
     /// Trackpads (and Magic Mouse) send scroll and momentum phases; wheel mice send neither.
@@ -68,6 +78,8 @@ final class ScrollTap {
             return Unmanaged.passUnretained(event)
         }
         guard type == .scrollWheel, isEnabled else { return Unmanaged.passUnretained(event) }
+        // Backup for the change notification, in case a macOS update renames it.
+        if Date().timeIntervalSince(lastSettingRead) > 5 { refreshSystemSetting() }
         let device = ScrollTap.device(of: event)
         lastDevice = device
         if wantsNatural[device, default: systemNatural] != systemNatural {
